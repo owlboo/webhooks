@@ -71,7 +71,6 @@ export function AppSidebar({
   // Note: I'm using state to show active item.
   // IRL you should use the url/router.
   const [activeItem, setActiveItem] = React.useState(data.navMain[0])
-  const [mails, setMails] = React.useState(data.mails)
   const { setOpen } = useSidebar()
 
   return (
@@ -114,17 +113,6 @@ export function AppSidebar({
                       tooltip={{
                         children: item.title,
                         hidden: false,
-                      }}
-                      onClick={() => {
-                        setActiveItem(item)
-                        const mail = data.mails.sort(() => Math.random() - 0.5)
-                        setMails(
-                          mail.slice(
-                            0,
-                            Math.max(5, Math.floor(Math.random() * 10) + 1),
-                          ),
-                        )
-                        setOpen(true)
                       }}
                       isActive={activeItem?.title === item.title}
                       className='px-2.5 md:px-2'

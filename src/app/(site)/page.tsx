@@ -20,17 +20,15 @@ import {
 } from '@/components/ui/sidebar'
 import { Switch } from '@/components/ui/switch'
 import WebhookSidebar from '@/components/webhook-sidebar'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { Webhook } from '@/lib/superbase/supabase.types'
 export default function Page() {
-  const [selectedWebhook, setSelectedWebhook] = useState(null)
+  const [selectedWebhook, setSelectedWebhook] = useState<Webhook>()
 
   const router = useRouter()
   const [webhooks, setWebhooks] = useState<Webhook[]>([])
-  const searchParams = useSearchParams()
-  const folder_id = searchParams.get('id')
-  const [folderId, setFolderId] = useState(folder_id)
+  const [folderId, setFolderId] = useState('')
   // const [webhookDetail, setWebhookDetail] = useState()
   const [webhookUrl, setWebhookUrl] = useState('')
 
@@ -105,7 +103,7 @@ export default function Page() {
               webhooks.map(
                 webhook =>
                   webhook && (
-                    <div className='flex flex-row mb-3'>
+                    <div key={webhook.tag} className='flex flex-row mb-3'>
                       <WebhookSidebar
                         clasName='flex flex-row bg-green-300 hover:bg-blue-300 hover:text-primary-foreground p-2 w-full rounded-md cursor-pointer border hover:cursor-pointer
                   '
