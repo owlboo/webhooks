@@ -34,16 +34,13 @@ export async function POST(req: NextRequest) {
 
   const supabase = createClient();
 
-  let folder: Folder = {
+  const folder: Folder = {
     created_at: new Date().toISOString()
   }
 
-  const { data: webhook, error } = await supabase.from("folder").insert(folder).select().single();
+  const { data: webhook } = await supabase.from("folder").insert(folder).select().single();
 
-  console.log(error);
-  console.log(webhook);
-
-  let { origin } = new URL(req.url);
+  const { origin } = new URL(req.url);
 
   return NextResponse.json({
     id: webhook.id,
