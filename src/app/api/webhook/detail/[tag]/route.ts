@@ -14,7 +14,7 @@ export async function GET(
 
   const response = await fetch(requestUrl, {});
 
-  var data = await response.json();
+  const data = await response.json();
 
   return NextResponse.json(data.data);
 }

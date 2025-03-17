@@ -34,7 +34,7 @@ export default function Page() {
   // const [webhookDetail, setWebhookDetail] = useState()
   const [webhookUrl, setWebhookUrl] = useState('')
 
-  const fetchWebhooks = async (id: any) => {
+  const fetchWebhooks = async (id: string) => {
     if (!id) return []
     const response = await fetch(`/api/webhook?folder_id=${id}`)
     const data = await response.json()
@@ -49,7 +49,7 @@ export default function Page() {
         setWebhookUrl(data.url)
       }
     })
-  }, [folderId])
+  }, [folderId, router])
 
   useEffect(() => {
     console.log(webhooks)
@@ -66,7 +66,7 @@ export default function Page() {
   const handleSearch = () => {
     console.log(folderId)
     //router.replace(`?id=${folderId}`)
-    fetchWebhooks(folderId).then(data => {
+    fetchWebhooks(folderId as string).then(data => {
       if (data) {
         setWebhooks(data.webhooks)
         setWebhookUrl(data.url)
@@ -75,18 +75,16 @@ export default function Page() {
   }
 
   const onWebhookClick = async (tag: string) => {
-    let data = await fetch(`/api/webhook/${tag}`)
-
-    let webhook = await data.json()
-    console.log(webhook)
+    const response = await fetch(`/api/webhook/${tag}`)
+    const webhook = await response.json()
     setSelectedWebhook(webhook)
   }
 
   const createNewFolder = async () => {
-    let data = await fetch(`/api/webhook`, {
+    const data = await fetch(`/api/webhook`, {
       method: 'POST',
     })
-    let folder = await data.json()
+    const folder = await data.json()
     setWebhookUrl(folder.url)
     setFolderId(folder.id)
     setWebhooks([])

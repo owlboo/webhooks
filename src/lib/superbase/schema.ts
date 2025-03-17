@@ -1,7 +1,4 @@
 import { pgTable, foreignKey, uuid, json, varchar, timestamp, boolean } from "drizzle-orm/pg-core"
-import { sql } from "drizzle-orm"
-
-
 
 export const webhook = pgTable("webhook", {
   id: uuid().defaultRandom().primaryKey().notNull(),

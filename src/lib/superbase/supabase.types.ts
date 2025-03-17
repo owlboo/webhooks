@@ -1,8 +1,3 @@
-import { InferSelectModel, InferInsertModel } from "drizzle-orm";
-
-import { folder, incomingWebhooks } from '../../../migrations/schema'
-
-
 
 export type Json =
   | string

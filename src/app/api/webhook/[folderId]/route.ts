@@ -18,7 +18,7 @@ export async function GET(
 
   const supbase = createClient();
 
-  let response = await supbase.from("folder").select("*").eq("id", folderId);
+  const response = await supbase.from("folder").select("*").eq("id", folderId);
 
   const { error } = response;
   if (error) {
@@ -29,7 +29,7 @@ export async function GET(
 
   console.log(req);
 
-  let headers = Object.fromEntries(req.headers);
+  const headers = Object.fromEntries(req.headers);
   const webhook: Webhook = {
     is_read: false,
     created_at: new Date().toISOString(),
