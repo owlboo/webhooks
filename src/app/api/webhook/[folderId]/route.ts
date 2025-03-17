@@ -1,10 +1,7 @@
 import { createClient } from "@/lib/superbase/client";
+import { Webhook } from "@/lib/superbase/supabase.types";
+import { generateRandomString } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
-import { env } from "process";
-import { Folder, IncommingWebhooks, Webhook } from '@/lib/superbase/supabase.types';
-import { generateRandomString } from '@/lib/utils'
-import { uuid } from "drizzle-orm/pg-core";
-const API_URL = env.WEBHOOK_API_DOMAIN;
 
 export async function GET(
   req: NextRequest,
@@ -21,8 +18,9 @@ export async function GET(
 
   const supbase = createClient();
 
-  var { data, error } = await supbase.from("folder").select("*").eq("id", folderId);
+  let response = await supbase.from("folder").select("*").eq("id", folderId);
 
+  const { error } = response;
   if (error) {
     return NextResponse.json({}, { status: 404 });
   }
@@ -31,7 +29,7 @@ export async function GET(
 
   console.log(req);
 
-  var headers = Object.fromEntries(req.headers);
+  let headers = Object.fromEntries(req.headers);
   const webhook: Webhook = {
     is_read: false,
     created_at: new Date().toISOString(),
@@ -45,9 +43,9 @@ export async function GET(
     url: req.url,
   };
 
-  var { data, error } = await supbase.from("webhook").insert(webhook).select();
+  const { data, error: insertError } = await supbase.from("webhook").insert(webhook).select();
 
-  console.log(error);
+  console.log(insertError);
 
   return NextResponse.json(data);
 }

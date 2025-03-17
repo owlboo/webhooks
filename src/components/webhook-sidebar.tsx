@@ -33,7 +33,7 @@ function WebhookSidebar({
     case 'PUT':
       bgMethodColor = 'bg-yellow-500'
       break
-    case 'POST':
+    case 'DELETE':
       bgMethodColor = 'bg-red-500'
       break
   }

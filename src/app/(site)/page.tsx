@@ -23,9 +23,7 @@ import WebhookSidebar from '@/components/webhook-sidebar'
 import { useRouter, useSearchParams } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 
-export default function Page({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default function Page() {
   const [selectedWebhook, setSelectedWebhook] = useState(null)
 
   const router = useRouter()
@@ -33,7 +31,7 @@ export default function Page({
   const searchParams = useSearchParams()
   const folder_id = searchParams.get('id')
   const [folderId, setFolderId] = useState(folder_id)
-  const [webhookDetail, setWebhookDetail] = useState({})
+  // const [webhookDetail, setWebhookDetail] = useState()
   const [webhookUrl, setWebhookUrl] = useState('')
 
   const fetchWebhooks = async (id: any) => {
@@ -44,13 +42,14 @@ export default function Page({
   }
   useEffect(() => {
     if (!folderId) return
+    router.replace('?id=' + folderId)
     fetchWebhooks(folderId).then(data => {
       if (data) {
         setWebhooks(data.webhooks)
         setWebhookUrl(data.url)
       }
     })
-  }, [])
+  }, [folderId])
 
   useEffect(() => {
     console.log(webhooks)
@@ -60,9 +59,9 @@ export default function Page({
     console.log(selectedWebhook)
   }, [selectedWebhook])
 
-  useEffect(() => {
-    router.replace('?id=' + folderId)
-  }, [folderId])
+  // useEffect(() => {
+  //   router.replace('?id=' + folderId)
+  // }, [folderId])
 
   const handleSearch = () => {
     console.log(folderId)
@@ -76,18 +75,18 @@ export default function Page({
   }
 
   const onWebhookClick = async (tag: string) => {
-    var data = await fetch(`/api/webhook/${tag}`)
+    let data = await fetch(`/api/webhook/${tag}`)
 
-    var webhook = await data.json()
+    let webhook = await data.json()
     console.log(webhook)
     setSelectedWebhook(webhook)
   }
 
   const createNewFolder = async () => {
-    var data = await fetch(`/api/webhook`, {
+    let data = await fetch(`/api/webhook`, {
       method: 'POST',
     })
-    var folder = await data.json()
+    let folder = await data.json()
     setWebhookUrl(folder.url)
     setFolderId(folder.id)
     setWebhooks([])
@@ -105,8 +104,8 @@ export default function Page({
         sidebarContent={
           <>
             {webhooks?.length > 0 ? (
-              webhooks.map((webhook, index) => (
-                <div className='flex flex-row mb-3'>
+              webhooks.map(webhook => (
+                <div key={webhook} className='flex flex-row mb-3'>
                   <WebhookSidebar
                     clasName='flex flex-row bg-green-300 hover:bg-blue-300 hover:text-primary-foreground p-2 w-full rounded-md cursor-pointer border hover:cursor-pointer
                   '
@@ -172,18 +171,16 @@ export default function Page({
         </header>
         <div className='flex flex-1 flex-col gap-4 p-4'>
           {webhooks.length == 0 && (
-            <>
-              <div className='flex flex-col gap-4'>
-                <Card className='min-h-full'>
-                  <CardContent className='m-2 flex flex-row gap-2'>
-                    <div className='w-full flex flex-col gap-2'>
-                      <Label>Your unique URL</Label>
-                      <span>{webhookUrl}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </>
+            <div className='flex flex-col gap-4'>
+              <Card className='min-h-full'>
+                <CardContent className='m-2 flex flex-row gap-2'>
+                  <div className='w-full flex flex-col gap-2'>
+                    <Label>Your unique URL</Label>
+                    <span>{webhookUrl}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           )}
           {selectedWebhook && (
             <>
