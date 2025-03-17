@@ -22,12 +22,12 @@ import { Switch } from '@/components/ui/switch'
 import WebhookSidebar from '@/components/webhook-sidebar'
 import { useRouter, useSearchParams } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
-
+import { Webhook } from '@/lib/superbase/supabase.types'
 export default function Page() {
   const [selectedWebhook, setSelectedWebhook] = useState(null)
 
   const router = useRouter()
-  const [webhooks, setWebhooks] = useState([])
+  const [webhooks, setWebhooks] = useState<Webhook[]>([])
   const searchParams = useSearchParams()
   const folder_id = searchParams.get('id')
   const [folderId, setFolderId] = useState(folder_id)
@@ -101,21 +101,24 @@ export default function Page() {
       <AppSidebar
         sidebarContent={
           <>
-            {webhooks?.length > 0 ? (
-              webhooks.map(webhook => (
-                <div key={webhook} className='flex flex-row mb-3'>
-                  <WebhookSidebar
-                    clasName='flex flex-row bg-green-300 hover:bg-blue-300 hover:text-primary-foreground p-2 w-full rounded-md cursor-pointer border hover:cursor-pointer
+            {webhooks && webhooks.length > 0 ? (
+              webhooks.map(
+                webhook =>
+                  webhook && (
+                    <div className='flex flex-row mb-3'>
+                      <WebhookSidebar
+                        clasName='flex flex-row bg-green-300 hover:bg-blue-300 hover:text-primary-foreground p-2 w-full rounded-md cursor-pointer border hover:cursor-pointer
                   '
-                    method={webhook.method}
-                    eventId={webhook.tag}
-                    path={webhook.query}
-                    createAt={webhook.created_at}
-                    key={webhook.tag}
-                    onClick={() => onWebhookClick(webhook.tag)}
-                  ></WebhookSidebar>
-                </div>
-              ))
+                        method={webhook.method}
+                        eventId={webhook.tag}
+                        path={webhook.query}
+                        createAt={webhook.created_at}
+                        key={webhook.tag}
+                        onClick={() => onWebhookClick(webhook.tag)}
+                      ></WebhookSidebar>
+                    </div>
+                  ),
+              )
             ) : (
               <div className='flex justify-center mt-2 font-bold'>
                 No Events

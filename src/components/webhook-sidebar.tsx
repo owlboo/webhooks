@@ -9,7 +9,7 @@ interface WebhookSidebarProps {
   path: string
   isSelected?: boolean
   onClick?: () => void
-  createAt?: Date
+  createAt?: string
 }
 
 function WebhookSidebar({
