@@ -1,11 +1,11 @@
-import React from "react";
-
-function HomePageLayout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
-    return <main>{children}</main>;
+import React from 'react'
+import { Suspense } from 'react'
+function HomePageLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <main>
+      <Suspense>{children}</Suspense>
+    </main>
+  )
 }
 
-export default HomePageLayout;
+export default HomePageLayout

@@ -9,7 +9,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -20,11 +20,13 @@ import {
 } from '@/components/ui/sidebar'
 import { Switch } from '@/components/ui/switch'
 import WebhookSidebar from '@/components/webhook-sidebar'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { Webhook } from '@/lib/superbase/supabase.types'
+import { Badge } from '@/components/ui/badge'
 export default function Page() {
   const [selectedWebhook, setSelectedWebhook] = useState<Webhook>()
+  const [headers, setHeaders] = useState<{ key: string; value: string }[]>([])
 
   const router = useRouter()
   const [webhooks, setWebhooks] = useState<Webhook[]>([])
@@ -32,12 +34,26 @@ export default function Page() {
   // const [webhookDetail, setWebhookDetail] = useState()
   const [webhookUrl, setWebhookUrl] = useState('')
 
+  const searchParams = useSearchParams()
+
   const fetchWebhooks = async (id: string) => {
     if (!id) return []
     const response = await fetch(`/api/webhook?folder_id=${id}`)
     const data = await response.json()
     return data
   }
+
+  useEffect(() => {
+    const folder_id = searchParams.get('id')
+    if (!folder_id) return
+    fetchWebhooks(folder_id).then(data => {
+      if (data) {
+        setWebhooks(data.webhooks)
+        setWebhookUrl(data.url)
+      }
+    })
+  }, [searchParams])
+
   useEffect(() => {
     if (!folderId) return
     router.replace('?id=' + folderId)
@@ -54,7 +70,22 @@ export default function Page() {
   }, [webhooks])
 
   useEffect(() => {
-    console.log(selectedWebhook)
+    //console.log(selectedWebhook?.headers)
+
+    if (selectedWebhook) {
+      const headerData = JSON.parse(JSON.stringify(selectedWebhook?.headers))
+
+      console.log(headerData)
+      let heads: { key: string; value: string }[] = []
+      for (const [key, value] of Object.entries(headerData)) {
+        if (key == 'cookie') continue
+        heads.push({
+          key: key,
+          value: value as string,
+        })
+      }
+      setHeaders(heads)
+    }
   }, [selectedWebhook])
 
   // useEffect(() => {
@@ -73,7 +104,7 @@ export default function Page() {
   }
 
   const onWebhookClick = async (tag: string) => {
-    const response = await fetch(`/api/webhook/${tag}`)
+    const response = await fetch(`/api/webhook/detail/${tag}`)
     const webhook = await response.json()
     setSelectedWebhook(webhook)
   }
@@ -86,6 +117,27 @@ export default function Page() {
     setWebhookUrl(folder.url)
     setFolderId(folder.id)
     setWebhooks([])
+  }
+
+  const getBgColorMethod = (method: any) => {
+    let bgMethodColor = ''
+
+    switch (method) {
+      case 'GET':
+        bgMethodColor = 'bg-green-500'
+        break
+      case 'POST':
+        bgMethodColor = 'bg-orange-300'
+        break
+      case 'PUT':
+        bgMethodColor = 'bg-yellow-500'
+        break
+      case 'DELETE':
+        bgMethodColor = 'bg-red-500'
+        break
+    }
+
+    return bgMethodColor
   }
 
   return (
@@ -127,7 +179,9 @@ export default function Page() {
         sidebarHeader={
           <>
             <div className='flex w-full items-center justify-between'>
-              <div className='text-foreground text-base font-medium'>Inbox</div>
+              <div className='text-foreground text-base font-medium'>
+                Inbox ({webhooks?.length})
+              </div>
               <Label className='flex items-center gap-2 text-sm'>
                 <span>Unreads</span>
                 <Switch className='shadow-none' />
@@ -169,7 +223,7 @@ export default function Page() {
           </Button>
         </header>
         <div className='flex flex-1 flex-col gap-4 p-4'>
-          {webhooks.length == 0 && (
+          {webhooks?.length == 0 && (
             <div className='flex flex-col gap-4'>
               <Card className='min-h-full'>
                 <CardContent className='m-2 flex flex-row gap-2'>
@@ -182,53 +236,107 @@ export default function Page() {
             </div>
           )}
           {selectedWebhook && (
-            <>
-              <div className='min-h-1/3 h-1/3 border-none'>
-                <div className='flex flex-col gap-4'>
-                  <Card>
-                    <CardHeader>Request Detail & Headers</CardHeader>
-                    <CardContent className='m-2 flex flex-row gap-2'>
-                      <div className='w-1/2 flex flex-col gap-2'>
-                        <div className='flex flex-row gap-5'>
-                          <Label className='w-[50px] text-wrap text-sm'>
-                            Host
-                          </Label>
-                          <div className=' text-sm'>
-                            {selectedWebhook.client_ip}
-                          </div>
+            <div className='min-h-1/3 border-none h-screen'>
+              <div className='flex flex-col gap-4'>
+                <Card className='w-full'>
+                  <CardHeader>Request Detail & Headers</CardHeader>
+                  <CardContent className='m-2 flex flex-row sm:flex-col md:flex-row gap-2 p-4'>
+                    <div className='w-2/5 flex flex-col gap-2 text-sm border-r-2'>
+                      <div className='flex flex-row text-sm'>
+                        <div className='w-[100px]'>
+                          <Badge
+                            className={`break-words ${getBgColorMethod(
+                              selectedWebhook.method,
+                            )}`}
+                          >
+                            {selectedWebhook.method}
+                          </Badge>
                         </div>
-                        <div className='flex flex-row gap-5'>
-                          <Label className='w-[50px] text-wrap text-sm'>
-                            Date
-                          </Label>
-                          <div className='text-sm'>
+                        <div className='ml-2'>
+                          <p className='break-words text-black font-semibold'>
+                            {selectedWebhook.url}
+                          </p>
+                        </div>
+                      </div>
+                      <div className='flex flex-row text-sm'>
+                        <div className='w-[100px]'>
+                          <p className='break-words'>Host</p>
+                        </div>
+                        <div>
+                          <p className='break-words text-black font-semibold'>
+                            {selectedWebhook.client_ip}
+                          </p>
+                        </div>
+                      </div>
+                      <div className='flex flex-row text-sm'>
+                        <div className='w-[100px]'>
+                          <p className='break-words'>Id</p>
+                        </div>
+                        <div>
+                          <p className='break-words text-black font-semibold'>
+                            {selectedWebhook.id}
+                          </p>
+                        </div>
+                      </div>
+                      <div className='flex flex-row text-sm'>
+                        <div className='w-[100px]'>
+                          <p className='break-words'>Date</p>
+                        </div>
+                        <div>
+                          <p className='break-words text-black font-semibold'>
                             {selectedWebhook.created_at}
-                          </div>
-                        </div>
-                        <div className='flex flex-row gap-5'>
-                          <Label className='w-[50px] sm:[w-50] text-wrap text-sm'>
-                            Id
-                          </Label>
-                          <div className='text-sm'>{selectedWebhook.id}</div>
-                        </div>
-                        <div className='flex flex-row gap-2'>
-                          <Label className='w-[50px] text-wrap text-sm'>
-                            Host
-                          </Label>
-                          <div className='text-sm'>
-                            {selectedWebhook.client_ip}
-                          </div>
+                          </p>
                         </div>
                       </div>
-                      <div className='w-1/2'>
-                        <div>Request headers</div>
+                      <div className='flex flex-row text-sm'>
+                        <div className='w-[100px]'>
+                          <p className='break-words'>Tag</p>
+                        </div>
+                        <div>
+                          <p className='break-words text-black font-semibold'>
+                            {'#' + selectedWebhook.tag}
+                          </p>
+                        </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                </div>
+                    </div>
+                    <div className='w-3/5 '>
+                      {headers.length > 0 &&
+                        headers.map(m => (
+                          <div
+                            key={m.key}
+                            className='grid grid-cols-2 mb-1 text-sm'
+                          >
+                            <div>
+                              <p className='break-words'>{m.key + ':'}</p>
+                            </div>
+                            <div>
+                              <p className='break-words text-black font-semibold'>
+                                {m.value}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </CardContent>
+                  <CardFooter className='m-2 flex flex-row sm:flex-col md:flex-row gap-2 p-4'>
+                    <div className='w-2/5 flex flex-col gap-2 text-sm border-r-2'>
+                      <div>Query string</div>
+                      <div>
+                        {selectedWebhook.query == '/'
+                          ? '(empty)'
+                          : selectedWebhook.query}
+                      </div>
+                    </div>
+                  </CardFooter>
+                </Card>
+                <Card className='w-full'>
+                  <CardHeader>Body</CardHeader>
+                  <CardContent className='flex justify-start items-center min-h-[200px] bg-neutral-300 m-4 rounded-sm'>
+                    {JSON.stringify(selectedWebhook.body)}
+                  </CardContent>
+                </Card>
               </div>
-              <div className='h-2/3 bg-gray-400 '></div>
-            </>
+            </div>
           )}
         </div>
       </SidebarInset>

@@ -20,7 +20,12 @@ export async function GET(req: NextRequest) {
 
     .select('*')
 
-    .eq('folder_id', folder_id.toString());
+
+    .eq('folder_id', folder_id.toString())
+    .order("created_at", {
+      ascending: false
+    })
+    ;
 
   return NextResponse.json({
     webhooks: response.data,

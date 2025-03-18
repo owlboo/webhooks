@@ -1,8 +1,6 @@
 
+import { createClient } from "@/lib/superbase/client";
 import { NextRequest, NextResponse } from "next/server";
-import { env } from "process";
-
-const API_URL = env.WEBHOOK_API_DOMAIN;
 
 export async function GET(
   req: NextRequest,
@@ -10,11 +8,14 @@ export async function GET(
 ) {
   const { tag } = await params // 'a', 'b', or 'c'
 
-  const requestUrl = `${API_URL}/api/webhook/get/${tag}`;
 
-  const response = await fetch(requestUrl, {});
+  const supabase = createClient();
 
-  const data = await response.json();
+  const { data: webhook, error } = await supabase.from("webhook").select("*").eq("tag", tag.toString()).single();
 
-  return NextResponse.json(data.data);
+  if (error) {
+    return NextResponse.json({});
+  }
+
+  return NextResponse.json(webhook);
 }
