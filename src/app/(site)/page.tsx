@@ -78,7 +78,7 @@ export default function Page() {
       console.log(headerData)
       let heads: { key: string; value: string }[] = []
       for (const [key, value] of Object.entries(headerData)) {
-        if (key == 'cookie') continue
+        if (key == 'cookie' || key.startsWith('x-vercel')) continue
         heads.push({
           key: key,
           value: value as string,
@@ -241,7 +241,7 @@ export default function Page() {
                 <Card className='w-full'>
                   <CardHeader>Request Detail & Headers</CardHeader>
                   <CardContent className='m-2 flex flex-row sm:flex-col md:flex-row gap-2 p-4'>
-                    <div className='w-2/5 flex flex-col gap-2 text-sm border-r-2'>
+                    <div className='w-1/2 flex flex-col gap-2 text-sm border-r-2'>
                       <div className='flex flex-row text-sm'>
                         <div className='w-[100px]'>
                           <Badge
@@ -299,7 +299,7 @@ export default function Page() {
                         </div>
                       </div>
                     </div>
-                    <div className='w-3/5 '>
+                    <div className='w-1/2 '>
                       {headers.length > 0 &&
                         headers.map(m => (
                           <div
