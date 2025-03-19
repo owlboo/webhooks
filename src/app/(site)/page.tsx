@@ -81,7 +81,7 @@ export default function Page() {
     if (selectedWebhook) {
       // console.log(headerData)
 
-      const headerData = JSON.parse(selectedWebhook.headers as string)
+      const headerData = JSON.parse(JSON.stringify(selectedWebhook.headers))
       let heads: { key: string; value: string }[] = []
       for (const [key, value] of Object.entries(headerData)) {
         heads.push({
