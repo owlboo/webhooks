@@ -36,6 +36,7 @@ export default function Page() {
   const [webhookUrl, setWebhookUrl] = useState('')
 
   const [queryString, setQueryString] = useState<any>()
+  const [countWebhook, setCountWebhook] = useState(0)
 
   const searchParams = useSearchParams()
 
@@ -53,6 +54,7 @@ export default function Page() {
       if (data) {
         setWebhooks(data.webhooks)
         setWebhookUrl(data.url)
+        setCountWebhook(data.total)
       }
     })
   }, [searchParams])
@@ -64,6 +66,7 @@ export default function Page() {
       if (data) {
         setWebhooks(data.webhooks)
         setWebhookUrl(data.url)
+        setCountWebhook(data.total)
       }
     })
   }, [folderId, router])
@@ -77,8 +80,10 @@ export default function Page() {
 
     if (selectedWebhook) {
       // console.log(headerData)
+
+      const headerData = JSON.parse(selectedWebhook.headers as string)
       let heads: { key: string; value: string }[] = []
-      for (const [key, value] of Object.entries(selectedWebhook.headers)) {
+      for (const [key, value] of Object.entries(headerData)) {
         heads.push({
           key: key,
           value: value as string,
@@ -106,6 +111,7 @@ export default function Page() {
       if (data) {
         setWebhooks(data.webhooks)
         setWebhookUrl(data.url)
+        setCountWebhook(data.total)
       }
     })
   }
@@ -187,7 +193,7 @@ export default function Page() {
           <>
             <div className='flex w-full items-center justify-between'>
               <div className='text-foreground text-base font-medium'>
-                Inbox ({webhooks?.length})
+                Inbox ({countWebhook})
               </div>
               <Label className='flex items-center gap-2 text-sm'>
                 <span>Unreads</span>

@@ -17,19 +17,27 @@ export async function GET(req: NextRequest) {
 
   const response = await supabase
     .from('webhook')
-
     .select('*')
-
-
     .eq('folder_id', folder_id.toString())
     .order("created_at", {
       ascending: false
     })
     ;
 
+
+  const { count } = await supabase
+    .from('webhook')
+    .select('*', { count: 'exact', head: true })
+    .eq('folder_id', folder_id.toString())
+    .order("created_at", {
+      ascending: false
+    })
+  //console.log(response);
+
   return NextResponse.json({
     webhooks: response.data,
-    url: `${requestUrl.origin}/api/webhook/${folder_id}`
+    url: `${requestUrl.origin}/api/webhook/${folder_id}`,
+    total: count
   });
 
 
