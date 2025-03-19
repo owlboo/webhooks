@@ -6,7 +6,7 @@ interface WebhookSidebarProps {
   clasName: string
   eventId: string
   method: string
-  path: string
+  host?: string
   isSelected?: boolean
   onClick?: () => void
   createAt?: string
@@ -16,7 +16,7 @@ function WebhookSidebar({
   clasName,
   eventId,
   method,
-  path,
+  host,
   onClick,
   createAt,
   ...props
@@ -50,15 +50,13 @@ function WebhookSidebar({
           <Badge variant={'secondary'} className={clsx('', bgMethodColor)}>
             {method}
           </Badge>{' '}
-          <span className='text-sm text-gray-500'>{path || '/'}</span>
+          <span className='text-sm text-gray-500'>
+            {'#' + eventId} {host}
+          </span>
         </div>
 
         <div className='flex w-full items-center justify-between'>
-          <div className='text-foreground text-base font-medium'>
-            <Label className='flex items-center gap-2 text-sm cursor-pointer'>
-              {'#' + eventId}
-            </Label>
-          </div>
+          <div className='text-foreground text-base font-medium'></div>
           <Label className='flex items-center gap-2 text-sm font-thin'>
             <span>{createAt?.toLocaleString()}</span>
           </Label>

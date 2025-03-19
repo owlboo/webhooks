@@ -24,6 +24,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { Webhook } from '@/lib/superbase/supabase.types'
 import { Badge } from '@/components/ui/badge'
+import Link from 'next/link'
 export default function Page() {
   const [selectedWebhook, setSelectedWebhook] = useState<Webhook>()
   const [headers, setHeaders] = useState<{ key: string; value: string }[]>([])
@@ -33,6 +34,8 @@ export default function Page() {
   const [folderId, setFolderId] = useState('')
   // const [webhookDetail, setWebhookDetail] = useState()
   const [webhookUrl, setWebhookUrl] = useState('')
+
+  const [queryString, setQueryString] = useState<any>()
 
   const searchParams = useSearchParams()
 
@@ -73,18 +76,22 @@ export default function Page() {
     //console.log(selectedWebhook?.headers)
 
     if (selectedWebhook) {
-      const headerData = JSON.parse(JSON.stringify(selectedWebhook?.headers))
-
-      console.log(headerData)
+      // console.log(headerData)
       let heads: { key: string; value: string }[] = []
-      for (const [key, value] of Object.entries(headerData)) {
-        if (key == 'cookie' || key.startsWith('x-vercel')) continue
+      for (const [key, value] of Object.entries(selectedWebhook.headers)) {
         heads.push({
           key: key,
           value: value as string,
         })
       }
+      // const entries = Object.entries(headerData)
+      // console.log(entries)
       setHeaders(heads)
+
+      const queryString = new URL(selectedWebhook.url)
+      const searchParams = queryString.searchParams
+
+      setQueryString(Object.fromEntries(searchParams))
     }
   }, [selectedWebhook])
 
@@ -161,7 +168,7 @@ export default function Page() {
                   '
                         method={webhook.method}
                         eventId={webhook.tag}
-                        path={webhook.query}
+                        host={webhook.client_ip}
                         createAt={webhook.created_at}
                         key={webhook.tag}
                         onClick={() => onWebhookClick(webhook.tag)}
@@ -240,10 +247,10 @@ export default function Page() {
               <div className='flex flex-col gap-4'>
                 <Card className='w-full'>
                   <CardHeader>Request Detail & Headers</CardHeader>
-                  <CardContent className='m-2 flex flex-row sm:flex-col md:flex-row gap-2 p-4'>
-                    <div className='w-1/2 flex flex-col gap-2 text-sm border-r-2'>
-                      <div className='flex flex-row text-sm'>
-                        <div className='w-[100px]'>
+                  <CardContent className='m-2 flex flex-row sm:flex-col md:flex-row sm:border-b-2 border-none gap-2 p-4'>
+                    <div className='w-1/2 break-all flex flex-col gap-2 text-sm border-r-2'>
+                      <div className='flex flex-row'>
+                        <div className='min-w-[100px]'>
                           <Badge
                             className={`break-words ${getBgColorMethod(
                               selectedWebhook.method,
@@ -252,15 +259,20 @@ export default function Page() {
                             {selectedWebhook.method}
                           </Badge>
                         </div>
-                        <div className='ml-2'>
-                          <p className='break-words text-black font-semibold'>
-                            {selectedWebhook.url}
+                        <div className=''>
+                          <p className='break-words text-wrap text-black font-semibold'>
+                            <Link
+                              className='text-blue-500 hover:underline'
+                              href={selectedWebhook.url}
+                            >
+                              {selectedWebhook.url}
+                            </Link>
                           </p>
                         </div>
                       </div>
                       <div className='flex flex-row text-sm'>
-                        <div className='w-[100px]'>
-                          <p className='break-words'>Host</p>
+                        <div className='min-w-[100px]'>
+                          <p className='break-all'>Host</p>
                         </div>
                         <div>
                           <p className='break-words text-black font-semibold'>
@@ -269,7 +281,7 @@ export default function Page() {
                         </div>
                       </div>
                       <div className='flex flex-row text-sm'>
-                        <div className='w-[100px]'>
+                        <div className='min-w-[100px]'>
                           <p className='break-words'>Id</p>
                         </div>
                         <div>
@@ -279,7 +291,7 @@ export default function Page() {
                         </div>
                       </div>
                       <div className='flex flex-row text-sm'>
-                        <div className='w-[100px]'>
+                        <div className='min-w-[100px]'>
                           <p className='break-words'>Date</p>
                         </div>
                         <div>
@@ -289,7 +301,7 @@ export default function Page() {
                         </div>
                       </div>
                       <div className='flex flex-row text-sm'>
-                        <div className='w-[100px]'>
+                        <div className='min-w-[100px]'>
                           <p className='break-words'>Tag</p>
                         </div>
                         <div>
@@ -319,12 +331,16 @@ export default function Page() {
                     </div>
                   </CardContent>
                   <CardFooter className='m-2 flex flex-row sm:flex-col md:flex-row gap-2 p-4'>
-                    <div className='w-2/5 flex flex-col gap-2 text-sm border-r-2'>
+                    <div className='w-2/5 flex flex-col gap-2 text-sm'>
                       <div>Query string</div>
-                      <div>
-                        {selectedWebhook.query == '/'
-                          ? '(empty)'
-                          : selectedWebhook.query}
+                      <div className='text-sm flex flex-col gap-1 font-semibold mt-4'>
+                        {queryString &&
+                          Object.entries(queryString).map(m => (
+                            <div key={m[0]} className='flex flex-row gap-1.5'>
+                              <div className='min-w-[200px]'>{m[0]}</div>
+                              <div>{m[1] as string}</div>
+                            </div>
+                          ))}
                       </div>
                     </div>
                   </CardFooter>

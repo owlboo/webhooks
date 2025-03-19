@@ -29,12 +29,12 @@ export async function GET(
 
   console.log(req);
 
-  const headers = Object.fromEntries(req.headers);
+  const headers = Object.fromEntries(req.headers.entries());
   const webhook: Webhook = {
     is_read: false,
     created_at: new Date().toISOString(),
-    body: JSON.stringify(body),
-    headers: JSON.stringify(headers),
+    body: body,
+    headers: headers,
     method: req.method,
     folder_id: folderId.toString(),
     client_ip: req.headers.get("x-forwarded-for")?.toString(),
@@ -56,13 +56,17 @@ export async function POST(
   { params }: { params: Promise<{ folderId: string }> }
 ) {
 
+  console.log(req)
   const { folderId } = await params // 'a', 'b', or 'c'
-  let body = {}; // Read the request body
 
-  if (req.body) {
-    body = await req.json()
+
+  let body = {};
+
+  try {
+    body = await req.json();
+  } catch (error) {
+
   }
-  console.log(body);
 
   const supbase = createClient();
 
@@ -77,7 +81,7 @@ export async function POST(
 
   console.log(req);
 
-  const headers = Object.fromEntries(req.headers);
+  const headers = Object.fromEntries(req.headers.entries());
   const webhook: Webhook = {
     is_read: false,
     created_at: new Date().toISOString(),
