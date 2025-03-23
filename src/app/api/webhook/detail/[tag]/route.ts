@@ -19,3 +19,24 @@ export async function GET(
 
   return NextResponse.json(webhook);
 }
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ tag: string }> }
+) {
+  const { tag } = await params // 'a', 'b', or 'c'
+
+
+  const supabase = createClient();
+
+
+  const { error } = await supabase.from("webhook").update({ is_read: true }).eq("tag", tag.toString());
+
+  console.log(error);
+  if (error) {
+    return NextResponse.json(error);
+  }
+
+  return NextResponse.json({});
+}
+

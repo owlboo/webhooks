@@ -22,9 +22,10 @@ import { Switch } from '@/components/ui/switch'
 import WebhookSidebar from '@/components/webhook-sidebar'
 import { useRouter, useSearchParams } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
-import { Webhook } from '@/lib/superbase/supabase.types'
+import { PagingData, Webhook } from '@/lib/superbase/supabase.types'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
+import Paging from '@/components/paging'
 export default function Page() {
   const [selectedWebhook, setSelectedWebhook] = useState<Webhook>()
   const [headers, setHeaders] = useState<{ key: string; value: string }[]>([])
@@ -38,11 +39,26 @@ export default function Page() {
   const [queryString, setQueryString] = useState<any>()
   const [countWebhook, setCountWebhook] = useState(0)
 
+  const [pageIndex, setPageIndex] = useState(0)
+
+  const [isOnlyUnread, setIsOnlyUnread] = useState(false)
+  const pageSize = 10
   const searchParams = useSearchParams()
 
-  const fetchWebhooks = async (id: string) => {
+  const fetchWebhooks = async (id: string, options?: any) => {
+    console.log(id)
     if (!id) return []
-    const response = await fetch(`/api/webhook?folder_id=${id}`)
+
+    let url = `/api/webhook?folder_id=${id}&page=${
+      pageIndex + 1
+    }&limit=${pageSize}`
+
+    console.log(options)
+    if (options && options.isOnlyUnread) {
+      url += '&isOnlyUnread=true'
+    }
+
+    const response = await fetch(url)
     const data = await response.json()
     return data
   }
@@ -52,6 +68,7 @@ export default function Page() {
     if (!folder_id) return
     fetchWebhooks(folder_id).then(data => {
       if (data) {
+        setFolderId(folder_id)
         setWebhooks(data.webhooks)
         setWebhookUrl(data.url)
         setCountWebhook(data.total)
@@ -64,6 +81,7 @@ export default function Page() {
     router.replace('?id=' + folderId)
     fetchWebhooks(folderId).then(data => {
       if (data) {
+        setFolderId(folderId)
         setWebhooks(data.webhooks)
         setWebhookUrl(data.url)
         setCountWebhook(data.total)
@@ -109,6 +127,7 @@ export default function Page() {
     //router.replace(`?id=${folderId}`)
     fetchWebhooks(folderId as string).then(data => {
       if (data) {
+        setFolderId(folderId)
         setWebhooks(data.webhooks)
         setWebhookUrl(data.url)
         setCountWebhook(data.total)
@@ -117,8 +136,20 @@ export default function Page() {
   }
 
   const onWebhookClick = async (tag: string) => {
+    let arrWebhook = [...webhooks]
+    let tagIndex = arrWebhook.findIndex(f => f.tag == tag)
+
+    if (!arrWebhook[tagIndex].is_read) {
+      arrWebhook[tagIndex].is_read = true
+      await fetch(`/api/webhook/detail/${tag}`, {
+        method: 'post',
+      })
+    }
+    setWebhooks([...arrWebhook])
+
     const response = await fetch(`/api/webhook/detail/${tag}`)
     const webhook = await response.json()
+
     setSelectedWebhook(webhook)
   }
 
@@ -131,6 +162,42 @@ export default function Page() {
     setFolderId(folder.id)
     setWebhooks([])
   }
+
+  const onPagingClick = async (isNext: boolean) => {
+    console.log('clicked')
+    if (pageIndex == 0 && !isNext) return
+    console.log(isNext)
+    const deduction = isNext ? 1 : -1
+    setPageIndex(pageIndex + deduction)
+  }
+
+  useEffect(() => {
+    if (folderId) {
+      fetchWebhooks(folderId).then(data => {
+        if (data) {
+          setFolderId(folderId)
+          setWebhooks(data.webhooks)
+          setWebhookUrl(data.url)
+          setCountWebhook(data.total)
+        }
+      })
+    }
+  }, [pageIndex])
+
+  useEffect(() => {
+    console.log(isOnlyUnread)
+    console.log('fetching', folderId)
+    fetchWebhooks(folderId, {
+      isOnlyUnread: isOnlyUnread,
+    }).then(data => {
+      if (data) {
+        setFolderId(folderId)
+        setWebhooks(data.webhooks)
+        setWebhookUrl(data.url)
+        setCountWebhook(data.total)
+      }
+    })
+  }, [isOnlyUnread, folderId])
 
   const getBgColorMethod = (method: any) => {
     let bgMethodColor = ''
@@ -164,29 +231,46 @@ export default function Page() {
       <AppSidebar
         sidebarContent={
           <>
-            {webhooks && webhooks.length > 0 ? (
-              webhooks.map(
-                webhook =>
-                  webhook && (
-                    <div key={webhook.tag} className='flex flex-row mb-3'>
-                      <WebhookSidebar
-                        clasName='flex flex-row bg-green-300 hover:bg-blue-300 hover:text-primary-foreground p-2 w-full rounded-md cursor-pointer border hover:cursor-pointer
-                  '
-                        method={webhook.method}
-                        eventId={webhook.tag}
-                        host={webhook.client_ip}
-                        createAt={webhook.created_at}
-                        key={webhook.tag}
-                        onClick={() => onWebhookClick(webhook.tag)}
-                      ></WebhookSidebar>
-                    </div>
-                  ),
-              )
-            ) : (
-              <div className='flex justify-center mt-2 font-bold'>
-                No Events
+            <div className='flex flex-col gap-2'>
+              <div className='max-h-[690px] overflow-y-auto'>
+                {webhooks && webhooks.length > 0 ? (
+                  webhooks.map(
+                    webhook =>
+                      webhook && (
+                        <div key={webhook.tag} className='flex flex-row mb-3'>
+                          <WebhookSidebar
+                            isRead={webhook.is_read}
+                            method={webhook.method}
+                            eventId={webhook.tag}
+                            host={webhook.client_ip}
+                            createAt={webhook.created_at}
+                            key={webhook.tag}
+                            onClick={() => onWebhookClick(webhook.tag)}
+                          ></WebhookSidebar>
+                        </div>
+                      ),
+                  )
+                ) : (
+                  <div className='flex justify-center mt-2 font-bold'>
+                    No Events
+                  </div>
+                )}
               </div>
-            )}
+              <div className=''>
+                <div>
+                  <Paging
+                    pageIndex={pageIndex}
+                    onNextPageClick={() => onPagingClick(true)}
+                    onPrevPageClick={() => onPagingClick(false)}
+                    hasNextPage={
+                      countWebhook > pageSize &&
+                      countWebhook > pageSize * pageIndex
+                    }
+                    totalPage={Math.ceil(countWebhook / pageSize)}
+                  ></Paging>
+                </div>
+              </div>
+            </div>
           </>
         }
         sidebarHeader={
@@ -197,7 +281,12 @@ export default function Page() {
               </div>
               <Label className='flex items-center gap-2 text-sm'>
                 <span>Unreads</span>
-                <Switch className='shadow-none' />
+                <Switch
+                  onCheckedChange={e => {
+                    setIsOnlyUnread(e.valueOf())
+                  }}
+                  className='shadow-none'
+                />
               </Label>
             </div>
             <div className='flex flex-row gap-4 items-center mt-4'>
@@ -269,7 +358,7 @@ export default function Page() {
                           <p className='break-words text-wrap text-black font-semibold'>
                             <Link
                               className='text-blue-500 hover:underline'
-                              href={selectedWebhook.url}
+                              href={selectedWebhook.url || '/'}
                             >
                               {selectedWebhook.url}
                             </Link>

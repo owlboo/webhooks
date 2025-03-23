@@ -26,3 +26,8 @@ export type Webhook = {
   tag: string,
   is_read: boolean,
 }
+
+export type PagingData = {
+  pageSize: number,
+  pageIndex: number
+}

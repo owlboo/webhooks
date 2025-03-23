@@ -13,26 +13,32 @@ export async function GET(req: NextRequest) {
     return NextResponse.json([]);
   }
 
+  const isOnlyUnread = requestUrl.searchParams.get('isOnlyUnread') || false;
+  const pageSize = requestUrl.searchParams.get('pageSize') || 10 as any;
+  const page = requestUrl.searchParams.get('page') || 1 as any;
+
   const supabase = createClient();
 
-  const response = await supabase
-    .from('webhook')
-    .select('*')
-    .eq('folder_id', folder_id.toString())
-    .order("created_at", {
-      ascending: false
-    })
+  const supabaseQuery = supabase.from('webhook').select('*').eq('folder_id', folder_id.toString());
+  supabaseQuery.range((page - 1) * pageSize, (page) * pageSize - 1);
+  supabaseQuery.order("created_at", {
+    ascending: false
+  });
+  if (isOnlyUnread) {
+    supabaseQuery.eq('is_read', false);
+  }
+
+  const response = await supabaseQuery
     ;
 
 
-  const { count } = await supabase
-    .from('webhook')
-    .select('*', { count: 'exact', head: true })
-    .eq('folder_id', folder_id.toString())
-    .order("created_at", {
-      ascending: false
-    })
-  //console.log(response);
+  const countQuery = supabase.from('webhook').select('*', { count: 'exact', head: true }).eq('folder_id', folder_id.toString());
+  if (isOnlyUnread) {
+    countQuery.eq('is_read', false);
+  }
+
+  const { count } = await countQuery
+  console.log(count);
 
   return NextResponse.json({
     webhooks: response.data,

@@ -3,22 +3,22 @@ import React from 'react'
 import { Badge } from './ui/badge'
 import { Label } from './ui/label'
 interface WebhookSidebarProps {
-  clasName: string
   eventId: string
   method: string
   host?: string
   isSelected?: boolean
   onClick?: () => void
   createAt?: string
+  isRead: boolean
 }
 
 function WebhookSidebar({
-  clasName,
   eventId,
   method,
   host,
   onClick,
   createAt,
+  isRead,
   ...props
 }: WebhookSidebarProps) {
   let bgMethodColor = ''
@@ -41,7 +41,12 @@ function WebhookSidebar({
   return (
     <div
       key={eventId}
-      className={clsx('w-full cursor-pointer', clasName)}
+      className={`flex flex-row p-2 w-full rounded-md cursor-pointer border hover:cursor-pointer
+        ${
+          isRead
+            ? 'bg-gray-200 hover:bg-neutral-400'
+            : ' bg-green-300 hover:bg-blue-300 hover:text-primary-foreground'
+        }`}
       {...props}
       onClick={onClick}
     >
